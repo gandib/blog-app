@@ -5,7 +5,18 @@ exports.typeDefs = `#graphql
 
 type Query {
     user: User
+    users: [User]
     posts: [Post]
+}
+
+type Mutation {
+  signup(name: String!, email: String!, password: String! ): AuthPayload,
+  signin(email:String!, password:String!): AuthPayload
+}
+
+type AuthPayload {
+  userError: String
+  token: String
 }
 
 type Post {
@@ -22,6 +33,7 @@ type User {
   name: String!
   email: String!
   password: User!
+  bio: String
   createdAt: String!
   posts: [Post]
 }

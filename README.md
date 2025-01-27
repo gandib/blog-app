@@ -1,6 +1,6 @@
-## Blop App
+# Blop App
 
-# Technology
+## Technology
 
 - Prisma
 - PostgreSQL
