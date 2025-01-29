@@ -20,6 +20,13 @@ const config_1 = __importDefault(require("../config"));
 const prisma = new client_1.PrismaClient();
 exports.resolvers = {
     Query: {
+        user: (parent, args, context) => __awaiter(void 0, void 0, void 0, function* () {
+            return yield prisma.user.findUniqueOrThrow({
+                where: {
+                    id: args.userId,
+                },
+            });
+        }),
         users: (parent, args, context) => __awaiter(void 0, void 0, void 0, function* () {
             return yield prisma.user.findMany();
         }),
@@ -40,9 +47,20 @@ exports.resolvers = {
             const hashedPassword = yield bcrypt_1.default.hash(args.password, 12);
             args.password = hashedPassword;
             const createUser = yield prisma.user.create({
-                data: args,
+                data: {
+                    name: args.name,
+                    email: args.email,
+                    password: args.password,
+                },
             });
-            // if(args)
+            if (args.bio) {
+                yield prisma.profile.create({
+                    data: {
+                        bio: args.bio,
+                        userId: createUser.id,
+                    },
+                });
+            }
             const token = yield (0, jwtHelpers_1.generateToken)({ userId: createUser.id }, config_1.default.jwt_secret_token);
             return {
                 token,
@@ -72,6 +90,22 @@ exports.resolvers = {
                 userError: null,
                 token,
             };
+        }),
+        createPost: (parent, args, context) => __awaiter(void 0, void 0, void 0, function* () {
+            const user = yield prisma.user.findUniqueOrThrow({
+                where: {
+                    id: args.authorId,
+                },
+            });
+            // if (!user) {
+            // }
+            return yield prisma.post.create({
+                data: {
+                    title: args.title,
+                    content: args.content,
+                    authorId: user.id,
+                },
+            });
         }),
     },
 };
