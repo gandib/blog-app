@@ -1,5 +1,6 @@
 import { Post } from "@prisma/client";
 import { prisma } from "../../prisma";
+import { checkUserAccess } from "../../checkUserAccess";
 
 export const postResolvers = {
   createPost: async (
@@ -46,34 +47,10 @@ export const postResolvers = {
     args: Partial<Post & { postId: string }>,
     { userInfo }: any
   ) => {
-    if (!userInfo) {
-      return {
-        userError: "You are not authorized!",
-        post: null,
-      };
-    }
+    const error = await checkUserAccess(userInfo, args.postId!);
 
-    const user = await prisma.user.findUnique({
-      where: {
-        id: userInfo.userId,
-      },
-      include: {
-        posts: true,
-      },
-    });
-
-    if (!user) {
-      return {
-        userError: "User not found!",
-        post: null,
-      };
-    }
-
-    if (!user.posts.some((post) => post.id.includes(args.postId!))) {
-      return {
-        userError: "Post not belongs to you!",
-        post: null,
-      };
+    if (error) {
+      return error;
     }
 
     const updatedPost = await prisma.post.update({
@@ -83,6 +60,55 @@ export const postResolvers = {
       data: {
         title: args.title,
         content: args.content,
+      },
+    });
+
+    return {
+      userError: null,
+      post: updatedPost,
+    };
+  },
+
+  deletePost: async (
+    parent: any,
+    args: { postId: string },
+    { userInfo }: any
+  ) => {
+    const error = await checkUserAccess(userInfo, args.postId);
+
+    if (error) {
+      return error;
+    }
+
+    const deletedPost = await prisma.post.delete({
+      where: {
+        id: args.postId,
+      },
+    });
+
+    return {
+      userError: null,
+      post: deletedPost,
+    };
+  },
+
+  publishPost: async (
+    parent: any,
+    args: Partial<Post & { postId: string }>,
+    { userInfo }: any
+  ) => {
+    const error = await checkUserAccess(userInfo, args.postId!);
+
+    if (error) {
+      return error;
+    }
+
+    const updatedPost = await prisma.post.update({
+      where: {
+        id: args.postId,
+      },
+      data: {
+        published: true,
       },
     });
 

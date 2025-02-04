@@ -1,7 +1,7 @@
 export const typeDefs = `#graphql
 
 type Query {
-    user(userId: ID!): User
+    user: User
     users: [User]
     posts: [Post]
 }
@@ -11,6 +11,8 @@ type Mutation {
   signin(email:String!, password:String!): AuthPayload,
   createPost(title: String!, content: String!): PostPayload,
   updatePost(postId: ID!, title: String, content: String): PostPayload
+  deletePost(postId: ID!): PostPayload
+  publishPost(postId: ID!): PostPayload
 }
 
 

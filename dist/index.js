@@ -13,6 +13,9 @@ const server_1 = require("@apollo/server");
 const standalone_1 = require("@apollo/server/standalone");
 const schema_1 = require("./schema");
 const resolvers_1 = require("./resolvers");
+const client_1 = require("@prisma/client");
+const jwtHelpers_1 = require("./utils/jwtHelpers");
+const prisma = new client_1.PrismaClient();
 const main = () => __awaiter(void 0, void 0, void 0, function* () {
     const server = new server_1.ApolloServer({
         typeDefs: schema_1.typeDefs,
@@ -20,6 +23,20 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
     });
     const { url } = yield (0, standalone_1.startStandaloneServer)(server, {
         listen: { port: 4000 },
+        context: (_a) => __awaiter(void 0, [_a], void 0, function* ({ req }) {
+            const token = req.headers.authorization;
+            if (!token) {
+                return {
+                    prisma,
+                    userInfo: null,
+                };
+            }
+            const userInfo = yield (0, jwtHelpers_1.getUserInfoFromToken)(token);
+            return {
+                prisma,
+                userInfo,
+            };
+        }),
     });
     console.log(`🚀  Server ready at: ${url}`);
 });
